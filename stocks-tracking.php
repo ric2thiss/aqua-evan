@@ -107,6 +107,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }, 3000);
       }
       // TEST
+      // From v1
     </script>
     <!-- End of alert message -->
     <div class="pagetitle">
