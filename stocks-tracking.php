@@ -106,6 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
           alert.remove();
         }, 3000);
       }
+      // TEST
     </script>
     <!-- End of alert message -->
     <div class="pagetitle">
