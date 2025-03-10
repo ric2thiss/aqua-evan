@@ -8,10 +8,16 @@ require_once('database/Database.php');
 
 require_once('controller/Product.php');
 
+require_once('controller/Supplier.php');
+
 $database = new Database();
 $db = $database->connect();
 
 $userData = new User($db);
+
+$Supplier_object = new Supplier($db);
+$suppliers = $Supplier_object->all();
+
 
 $product_object = new Product($db);
 $products = $product_object->all();
@@ -38,24 +44,33 @@ $userData = [
 
 // Process : Send data to database
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-  $supplier_field = $_POST["supplier_name"];
-  
-  $inputs = [
-    "product_name" => $_POST["product_name"] ?? null,
-    "product_cost" => $_POST["product_cost"] ?? null,
-    "product_quantity" => $_POST["product_quantity"] ?? null,
-    "supplier_name" => $_POST["supplier_name"] ?? null,
-    "date" => $_POST["date"] ?? null,
-    "user_id" => $_SESSION["user_id"] ?? null,
-    "activity" => ($user["firstname"] ?? '') . " " . ($user["lastname"] ?? '') . " inserted new product"
-  ];
 
-  if ($product_object->insert_product($inputs)) {
-    $_SESSION["status"] = "alert-success";
-    $_SESSION["alert"] = "Product successfully inserted";
-  } else {
-    $_SESSION["status"] = "alert-danger";
-    $_SESSION["alert"] = "Faild to insert product";
+  if (isset($_POST["add-product"])) {
+    $inputs = [
+      "product_name" => $_POST["product_name"] ?? null,
+      "product_cost" => $_POST["product_cost"] ?? null,
+      "product_quantity" => $_POST["product_quantity"] ?? null,
+      "supplier_id" => $_POST["supplier_id"] ?? null,
+      "date" => $_POST["date"] ?? null,
+      "user_id" => $_SESSION["user_id"] ?? null,
+      "activity" => ($user["firstname"] ?? '') . " " . ($user["lastname"] ?? '') . " inserted new product"
+    ];
+
+    if ($product_object->insert_product($inputs)) {
+      $_SESSION["status"] = "alert-success";
+      $_SESSION["alert"] = "Product successfully inserted";
+    } else {
+      $_SESSION["status"] = "alert-danger";
+      $_SESSION["alert"] = "Faild to add a product";
+    }
+  } else if (isset($_POST["add-supplier"])) {
+    if ($Supplier_object->insert()) {
+      $_SESSION["status"] = "alert-success";
+      $_SESSION["alert"] = "Supplier successfully inserted";
+    } else {
+      $_SESSION["status"] = "alert-danger";
+      $_SESSION["alert"] = "Faild to add supplier ";
+    }
   }
 }
 
@@ -94,11 +109,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </style>
     <!-- Alert Messages -->
     <?php if (!empty($_SESSION["alert"])): ?>
-      <div class="alert alert-success sticky-top insert-message col-md-3" role="alert">
+      <div class="alert <?= $_SESSION["status"] ?> sticky-top insert-message col-md-3" role="alert">
         <?= $_SESSION["alert"] ?>
       </div>
-      <?php unset($_SESSION["status"]);
-      unset($_SESSION["alert"]) ?>
+      <?php
+      unset($_SESSION["status"]);
+      unset($_SESSION["alert"]);
+      ?>
     <?php endif; ?>
     <script>
       const alert = document.querySelector(".insert-message");
@@ -115,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       <h1>Stocks Tracking</h1>
       <nav>
         <ol class="breadcrumb">
-          <li class="breadcrumb-item"><a href="index.php">Home</a></li>
+          <li class="breadcrumb-item"><a href="dashboard.php">Home</a></li>
           <li class="breadcrumb-item active">Stocks Tracking</li>
         </ol>
       </nav>
@@ -334,16 +351,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             <!-- Add Product Modal -->
             <section class="section mb-4">
-              <!-- Large Modal -->
-              <!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#insert-product">
-                  Insert Product
-              </button> -->
-              <!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-category">
-                  Add Supplier
-              </button> -->
-              <!-- <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#re-stock">
-                  Re-Stock
-              </button> -->
               <!-- Form -->
               <!-- Insert Product -->
               <div class="modal fade" id="insert-product" tabindex="-1">
@@ -376,7 +383,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         </div>
                         <div class="col-md-8">
                           <div class="form-floating">
-                            <input type="text" name="supplier_name" class="form-control" id="floatingSupplier" placeholder="Supplier">
+                            <!-- <input type="text" name="supplier_name" class="form-control" id="floatingSupplier" placeholder="Supplier"> -->
+                            <select class="form-select" name="supplier_id" aria-label="Default select example">
+                              <?php if (empty($suppliers)): ?>
+                                <option value="">No supplier found. (Please insert a supplier name first)</option>
+                              <?php endif ?>
+                              <?php foreach ($suppliers as $supplier): ?>
+                                <option value="<?= $supplier["supplier_id"] ?>"><?= $supplier["supplier_name"] ?></option>
+                              <?php endforeach ?>
+                            </select>
                             <label for="floatingSupplier">Supplier</label>
                           </div>
                         </div>
@@ -398,14 +413,60 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         </div>
                         <div class="modal-footer">
                           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                          <button type="submit" class="btn btn-primary">Submit</button>
+                          <button type="submit" class="btn btn-primary" name="add-product">Submit</button>
                         </div>
                       </form><!-- End floating Labels Form -->
                     </div>
 
                   </div>
                 </div>
-              </div><!-- End Large Modal-->
+              </div><!-- End Insert Product Modal-->
+
+              <!-- Form -->
+              <!-- Insert Supplier -->
+              <div class="modal fade" id="insert-supplier" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Create Supplier</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <!-- Floating Labels Form -->
+                      <form class="row g-3" method="POST" action="<?= htmlspecialchars($_SERVER["PHP_SELF"]) ?>">
+                        <div class="col-md-6">
+                          <div class="form-floating">
+                            <input type="text" name="supplier_name" class="form-control" id="floatingSupplierName" placeholder="Supplier Name">
+                            <label for="floatingSupplierName">Supplier Name</label>
+                          </div>
+                        </div>
+
+                        <div class="col-md-6">
+                          <div class="form-floating">
+                            <!-- <input type="text" name="supplier_name" class="form-control" id="floatingSupplier" placeholder="Supplier"> -->
+                            <select class="form-select" aria-label="Default select example">
+                              <?php if (empty($suppliers)): ?>
+                                <option>No supplier created.</option>
+                              <?php endif ?>
+                              <?php foreach ($suppliers as $supplier): ?>
+                                <option value="<?= $supplier["supplier_id"] ?>"><?= $supplier["supplier_name"] ?></option>
+                              <?php endforeach ?>
+                            </select>
+                            <label for="floatingSupplier">Suppliers List</label>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          <button type="submit" class="btn btn-primary" name="add-supplier">Submit</button>
+                        </div>
+                      </form><!-- End floating Labels Form -->
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+              <!-- End Insert Supplier -->
+
             </section>
 
 
@@ -431,6 +492,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                   <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#insert-product">
                     Insert Product
                   </button>
+                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#insert-supplier">
+                    Insert Supplier
+                  </button>
 
                   <table class="table datatable">
                     <thead>
@@ -451,45 +515,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <tbody>
                       <?php foreach ($products as $product): ?>
                         <tr>
-                          <td><?=$product["product_id"]?></td>
+                          <td><?= $product["product_id"] ?></td>
                           <td></td>
-                          <td><?=$product["product_name"]?></td>
-                          <td><?=$product["product_cost"]?></td>
-                          <td><?=$product["product_quantity"]?></td>
-                          <td><?=$product["product_total_cost"]?></td>
-                          <td><?=$product["supplier_name"]?></td>
-                          <td><?= date("d, F Y", strtotime($product["date"]));?></td>
-                          <td><?= date("d, F Y", strtotime($product["created_at"]));?></td>
-                          <td><?=$product["firstname"] . " " . $product["lastname"]?></td>
-                          <td><?=$product["product_id"]?></td>
+                          <td><?= $product["product_name"] ?></td>
+                          <td><?= $product["product_cost"] ?></td>
+                          <td><?= $product["product_quantity"] ?></td>
+                          <td><?= $product["product_total_cost"] ?></td>
+                          <td><?= $product["supplier_name"] ?></td>
+                          <td><?= date("d, F Y", strtotime($product["date"])); ?></td>
+                          <td><?= date("d, F Y", strtotime($product["created_at"])); ?></td>
+                          <td><?= $product["firstname"] . " " . $product["lastname"] ?></td>
+                          <td><?= $product["product_id"] ?></td>
                         </tr>
                       <?php endforeach ?>
-                      <!-- <tr>
-                        <td>1</td>
-                        <td><a href="#"><img src="assets/img/product-1.jpg" alt=""></a></td>
-                        <td><a href="#" class="text-primary fw-bold">Ut inventore ipsa voluptas nulla</a></td>
-                        <td>$64</td>
-                        <td class="fw-bold">124</td>
-                        <td>$5,828</td>
-                        <td class="fw-bold">124</td>
-                        <td>$5,828</td>
-                        <td class="fw-bold">124</td>
-                        <td>$5,828</td>
-                        <td class="fw-bold">124</td>
-                      </tr>
-                      <tr>
-                        <td>1</td>
-                        <th scope="row"><a href="#"><img src="assets/img/product-1.jpg" alt=""></a></th>
-                        <td><a href="#" class="text-primary fw-bold">Ut inventore ipsa voluptas nulla</a></td>
-                        <td>$64</td>
-                        <td class="fw-bold">124</td>
-                        <td>$5,828</td>
-                        <td class="fw-bold">124</td>
-                        <td>$5,828</td>
-                        <td class="fw-bold">124</td>
-                        <td>$5,828</td>
-                        <td class="fw-bold">124</td>
-                      </tr> -->
+                      
                     </tbody>
                   </table>
 
@@ -582,8 +621,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
               </div>
 
             </div>
-          </div><!-- End Reports -->
-        </div><!-- End Left side columns -->
+          </div>
+          <!-- End Reports -->
+        </div>
 
 
       </div>

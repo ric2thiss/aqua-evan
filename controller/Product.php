@@ -59,17 +59,21 @@ class Product
         $product_name = $this->sanitize($data["product_name"]);
         $product_cost = $this->sanitize($data["product_cost"]);
         $product_quantity = $this->sanitize($data["product_quantity"]);
-        $product_total_cost = $product_cost * $product_quantity;
-        $supplier_name = $this->sanitize($data["supplier_name"]);
+        $product_total_cost = (int) $product_cost * (int) $product_quantity;
+        $supplier_id = $this->sanitize($data["supplier_id"]);
         $date = $this->sanitize($data["date"]);
         $user_id = $this->sanitize($data["user_id"]);
         $activity = $this->sanitize($data["activity"]);
 
+        if(empty($product_name) || empty($product_cost) || empty($product_quantity) || empty($supplier_id) || empty($date) || empty($user_id)){
+            return false;
+        }
+
         try {
-            $create_supplier = $this->insert_supplier($supplier_name);
+            // $create_supplier = $this->insert_supplier($supplier_name);
             $create_activity = $this->insert_activity($activity, $user_id);
 
-            if ($create_supplier && $create_activity) {
+            if ($create_activity) {
                 $sql = "INSERT INTO products (product_name, product_cost, product_quantity, product_total_cost, supplier_id, date, user_id, activity_id) 
                         VALUES (:product_name, :product_cost, :product_quantity, :product_total_cost, :supplier_id, :date, :user_id, :activity_id)";
                 $stmt = $this->dbconn->prepare($sql);
@@ -77,7 +81,7 @@ class Product
                 $stmt->bindParam(":product_cost", $product_cost);
                 $stmt->bindParam(":product_quantity", $product_quantity);
                 $stmt->bindParam(":product_total_cost", $product_total_cost);
-                $stmt->bindParam(":supplier_id", $create_supplier);
+                $stmt->bindParam(":supplier_id", $supplier_id);
                 $stmt->bindParam(":date", $date);
                 $stmt->bindParam(":user_id", $user_id);
                 $stmt->bindParam(":activity_id", $create_activity);
