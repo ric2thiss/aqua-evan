@@ -105,11 +105,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         top: 10%;
         right: 2%;
         z-index: 9999999;
+        transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+      }
+
+      .remove {
+        transform: translateX(300px);
+        /* Smaller value for a smoother transition */
+        opacity: 0
+        /* Fade out for a better effect */
       }
     </style>
+
     <!-- Alert Messages -->
     <?php if (!empty($_SESSION["alert"])): ?>
-      <div class="alert <?= $_SESSION["status"] ?> sticky-top insert-message col-md-3" role="alert">
+      <div id="alertBox" class="alert <?= $_SESSION["status"] ?> sticky-top insert-message col-md-3" role="alert">
         <?= $_SESSION["alert"] ?>
       </div>
       <?php
@@ -117,16 +126,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       unset($_SESSION["alert"]);
       ?>
     <?php endif; ?>
+
     <script>
-      const alert = document.querySelector(".insert-message");
-      if (alert) {
+      const alertBox = document.getElementById("alertBox");
+      if (alertBox) {
         setTimeout(() => {
-          alert.remove();
-        }, 3000);
+          alertBox.classList.add("remove");
+
+          // Wait for animation before removing the element
+          setTimeout(() => {
+            alertBox.remove();
+          }, 500); // Matches CSS transition time (0.5s)
+
+        }, 3000); // Alert disappears after 3 seconds
       }
-      // TEST
-      // From v1
     </script>
+
     <!-- End of alert message -->
     <div class="pagetitle">
       <h1>Stocks Tracking</h1>
@@ -528,7 +543,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                           <td><?= $product["product_id"] ?></td>
                         </tr>
                       <?php endforeach ?>
-                      
+
                     </tbody>
                   </table>
 
