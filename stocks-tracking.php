@@ -13,6 +13,8 @@ $db = $database->connect();
 
 $userData = new User($db);
 
+$product = new Product($db);
+
 
 // echo '<br>';
 // echo '<br>';
@@ -49,7 +51,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     "activity" => ($user["firstname"] ?? '') . " " . ($user["lastname"] ?? '') . " inserted new product"
   ];
 
-  $product = new Product($db);
   if ($product->insert_product($inputs)) {
     $_SESSION["status"] = "alert-success";
     $_SESSION["alert"] = "Product successfully inserted";
