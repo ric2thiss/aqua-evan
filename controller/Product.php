@@ -8,9 +8,21 @@ class Product
         $this->dbconn = $dbconnection;
     }
 
-    public function all(): ?array
+    public function all()
     {
-        return [];
+        try {
+            $sql = "SELECT products.*, s.supplier_name, u.firstname, u.lastname FROM products 
+                    LEFT JOIN suppliers s ON s.supplier_id = products.supplier_id
+                    LEFT JOIN users u ON u.user_id = products.user_id
+                    ORDER BY products.product_id DESC;";
+            $stmt = $this->dbconn->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $result;
+        } catch (PDOException $error) {
+            echo $error->getMessage();
+        }
+        
     }
 
     // Example function to fetch user by ID

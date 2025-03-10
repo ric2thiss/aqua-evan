@@ -13,17 +13,14 @@ $db = $database->connect();
 
 $userData = new User($db);
 
-$product = new Product($db);
+$product_object = new Product($db);
+$products = $product_object->all();
 
 
-// echo '<br>';
-// echo '<br>';
-
-//   print_r($user->getUserById($_SESSION["user_id"]));
+// Getter : Get userbyid
 $user = $userData->getUserById($_SESSION["user_id"]);
 
-
-// Data
+// Initial Load of Data fetch from database
 $userData = [
   'user' => [
     'username' => $user["firstname"],
@@ -41,6 +38,8 @@ $userData = [
 
 // Process : Send data to database
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+  $supplier_field = $_POST["supplier_name"];
+  
   $inputs = [
     "product_name" => $_POST["product_name"] ?? null,
     "product_cost" => $_POST["product_cost"] ?? null,
@@ -51,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     "activity" => ($user["firstname"] ?? '') . " " . ($user["lastname"] ?? '') . " inserted new product"
   ];
 
-  if ($product->insert_product($inputs)) {
+  if ($product_object->insert_product($inputs)) {
     $_SESSION["status"] = "alert-success";
     $_SESSION["alert"] = "Product successfully inserted";
   } else {
@@ -98,7 +97,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
       <div class="alert alert-success sticky-top insert-message col-md-3" role="alert">
         <?= $_SESSION["alert"] ?>
       </div>
-      <?php unset($_SESSION["status"]); unset($_SESSION["alert"]) ?>
+      <?php unset($_SESSION["status"]);
+      unset($_SESSION["alert"]) ?>
     <?php endif; ?>
     <script>
       const alert = document.querySelector(".insert-message");
@@ -440,7 +440,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <th scope="col">Product</th>
                         <th scope="col">Price</th>
                         <th scope="col">Qty</th>
-                        <th scope="col">Receipt</th>
+                        <th scope="col">Total</th>
                         <th scope="col">Supplier</th>
                         <th scope="col">Date</th>
                         <th scope="col">Uploaded</th>
@@ -449,7 +449,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
+                      <?php foreach ($products as $product): ?>
+                        <tr>
+                          <td><?=$product["product_id"]?></td>
+                          <td></td>
+                          <td><?=$product["product_name"]?></td>
+                          <td><?=$product["product_cost"]?></td>
+                          <td><?=$product["product_quantity"]?></td>
+                          <td><?=$product["product_total_cost"]?></td>
+                          <td><?=$product["supplier_name"]?></td>
+                          <td><?= date("d, F Y", strtotime($product["date"]));?></td>
+                          <td><?= date("d, F Y", strtotime($product["created_at"]));?></td>
+                          <td><?=$product["firstname"] . " " . $product["lastname"]?></td>
+                          <td><?=$product["product_id"]?></td>
+                        </tr>
+                      <?php endforeach ?>
+                      <!-- <tr>
                         <td>1</td>
                         <td><a href="#"><img src="assets/img/product-1.jpg" alt=""></a></td>
                         <td><a href="#" class="text-primary fw-bold">Ut inventore ipsa voluptas nulla</a></td>
@@ -474,7 +489,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         <td class="fw-bold">124</td>
                         <td>$5,828</td>
                         <td class="fw-bold">124</td>
-                      </tr>
+                      </tr> -->
                     </tbody>
                   </table>
 
