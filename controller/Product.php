@@ -22,8 +22,49 @@ class Product
         } catch (PDOException $error) {
             echo $error->getMessage();
         }
-        
     }
+
+    public function get_outofstock($data = [])
+    {
+        try {
+            $sql = "SELECT product_id,product_name,product_cost,product_quantity FROM products WHERE product_quantity < :min";
+            $stmt = $this->dbconn->prepare($sql);
+            $stmt->bindParam(':min', $data['min']);
+            $stmt->execute();
+            $outofstock = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $outofstock;
+        } catch (PDOException $error) {
+            echo $error->getMessage();
+            return null;
+        }
+    }
+
+    public function get_summary()
+    {
+        try {
+            $sql = "SELECT product_id, product_name,product_cost, COUNT(*) AS total_count, SUM(product_quantity) as product_total_quantity, SUM(product_total_cost) as total_cost
+                    FROM products
+                    GROUP BY product_name";
+            $stmt = $this->dbconn->prepare($sql);
+            $stmt->execute();
+            $summary = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return $summary;
+        }catch(PDOException $error){
+            echo $error->getMessage();
+            return null;
+        }
+    }
+
+    // public function where($data = []) : ?array
+    // {
+    //     try{
+
+    //     }catch(PDOException $error){
+    //         echo $error->getMessage();
+    //         return null;
+    //     }
+    //     return [];
+    // }
 
     // Example function to fetch user by ID
     // public function getUserById(int $user_id): ?array
@@ -65,7 +106,7 @@ class Product
         $user_id = $this->sanitize($data["user_id"]);
         $activity = $this->sanitize($data["activity"]);
 
-        if(empty($product_name) || empty($product_cost) || empty($product_quantity) || empty($supplier_id) || empty($date) || empty($user_id)){
+        if (empty($product_name) || empty($product_cost) || empty($product_quantity) || empty($supplier_id) || empty($date) || empty($user_id)) {
             return false;
         }
 
@@ -96,6 +137,25 @@ class Product
             return false;
         }
     }
+
+    public function insert_re_stock($data = []) {
+        $product_id = $this->sanitize($data["product_id"]);
+        $product_quantity = $this->sanitize($data["product_quantity"]);
+    
+        if (empty($product_id) || empty($product_quantity)) return false;
+    
+        try {
+            $sql = "UPDATE products SET product_quantity = product_quantity + :product_quantity WHERE product_id = :product_id";
+            $stmt = $this->dbconn->prepare($sql);
+            $stmt->bindParam(":product_id", $product_id, PDO::PARAM_INT);
+            $stmt->bindParam(":product_quantity", $product_quantity, PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (PDOException $error) {
+            error_log("Error updating product quantity: " . $error->getMessage());
+            return false;
+        }
+    }
+    
 
     // Activities
     public function insert_activity($activity, $user_id)

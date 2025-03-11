@@ -21,6 +21,8 @@ $suppliers = $Supplier_object->all();
 
 $product_object = new Product($db);
 $products = $product_object->all();
+$outofstocks = $product_object->get_outofstock(["min"=> 5]);
+$summary_list = $product_object->get_summary();
 
 
 // Getter : Get userbyid
@@ -70,6 +72,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     } else {
       $_SESSION["status"] = "alert-danger";
       $_SESSION["alert"] = "Faild to add supplier ";
+    }
+  }else if(isset($_POST["re-stock"])){
+    $inputs = [
+      "product_id" => $_POST["product_id"] ?? null,
+      "product_quantity" => $_POST["quantity"] ?? null,
+    ];
+
+    if($product_object->insert_re_stock($inputs)){
+      $_SESSION["status"] = "alert-success";
+      $_SESSION["alert"] = "Product successfully re-stocked";
+    }else{
+      $_SESSION["status"] = "alert-danger";
+      $_SESSION["alert"] = "Failed to re-stock product";
     }
   }
 }
@@ -321,14 +336,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td>1</td>
-                          <td>Gallon</td>
-                          <td>3</td>
-                          <td>20.00</td>
-                          <td>10</td>
-                          <td>200.00</td>
-                        </tr>
+                        <?php foreach($summary_list as $summary):?>
+                          <tr>
+                            <td><?=$summary["product_id"]?></td>
+                            <td><?=$summary["product_name"]?></td>
+                            <td><?=$summary["total_count"]?></td>
+                            <td><?=$summary["product_cost"]?></td>
+                            <td><?=$summary["product_total_quantity"]?></td>
+                            <td><?=$summary["total_cost"]?></td>
+                          </tr>
+                        <?php endforeach ?>
                       </tbody>
                     </table>
                   </div>
@@ -351,12 +368,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td>1</td>
-                          <td>Cap</td>
-                          <td>10.00</td>
-                          <td>4</td>
-                        </tr>
+                        <?php foreach($outofstocks as $outofstock): ?>
+                          <tr>
+                            <td><?=$outofstock["product_id"]?></td>
+                            <td><?=$outofstock["product_name"]?></td>
+                            <td><?=$outofstock["product_cost"]?></td>
+                            <td><?=$outofstock["product_quantity"]?></td>
+                          </tr>
+                        <?php endforeach ?>
                       </tbody>
                     </table>
                   </div>
@@ -481,6 +500,52 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
               </div>
               <!-- End Insert Supplier -->
+
+
+              <!-- Form -->
+              <!-- Re-Stock -->
+              <div class="modal fade" id="re-stock" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Re-Stock</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <!-- Floating Labels Form -->
+                      <form class="row g-3" method="POST" action="<?= htmlspecialchars($_SERVER["PHP_SELF"]) ?>">
+                        <div class="col-md-6">
+                          <div class="form-floating">
+                            <input type="text" name="quantity" class="form-control" id="floatingproduct_quantity" placeholder="product_quantity">
+                            <label for="floatingproduct_quantity">Product Quantity</label>
+                          </div>
+                        </div>
+
+                        <div class="col-md-6">
+                          <div class="form-floating">
+                            <!-- <input type="text" name="supplier_name" class="form-control" id="floatingSupplier" placeholder="Supplier"> -->
+                            <select class="form-select" name="product_id" aria-label="Default select example">
+                              <?php if (empty($products)): ?>
+                                <option>No product entries.</option>
+                              <?php endif ?>
+                              <?php foreach ($products as $product): ?>
+                                <option value="<?= $product["product_id"] ?>"><?= $product["product_id"] ?>. <?= $product["product_name"] ?></option>
+                              <?php endforeach ?>
+                            </select>
+                            <label for="floatingSupplier">Product Lists</label>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          <button type="submit" class="btn btn-primary" name="re-stock">Submit</button>
+                        </div>
+                      </form><!-- End floating Labels Form -->
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+              <!-- End Re-Stock -->
 
             </section>
 
