@@ -27,7 +27,7 @@ class Product
     public function get_outofstock($data = [])
     {
         try {
-            $sql = "SELECT product_id,product_name,product_cost,product_quantity FROM products WHERE product_quantity < :min";
+            $sql = "SELECT product_id,product_name,product_cost,product_quantity, COUNT(*) as total_count FROM products WHERE product_quantity < :min";
             $stmt = $this->dbconn->prepare($sql);
             $stmt->bindParam(':min', $data['min']);
             $stmt->execute();
