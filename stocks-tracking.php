@@ -285,7 +285,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <!-- Customers Card -->
             <div class="col-xxl-3 col-md-6">
 
-              <div class="card info-card customers-card">
+              <div class="card info-card customers-card overflow-auto">
 
                 <div class="filter">
                   <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
@@ -319,9 +319,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             </div><!-- End Customers Card -->
             <!-- Summary -->
-            <div class="row mt-3">
+            <div class="row mt-3 col-12">
               <div class="col-lg-6">
-                <div class="card">
+                <div class="card overflow-auto">
                   <div class="card-body">
                     <h5 class="card-title">Summary</h5>
                     <table class="table datatable">
@@ -352,7 +352,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </div>
               </div>
               <div class="col-lg-6">
-                <div class="card">
+                <div class="card overflow-auto">
                   <div class="card-body">
                     <h5 class="card-title">Out of Stock</h5>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#re-stock">

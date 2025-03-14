@@ -167,7 +167,7 @@ $userData = [
             </div><!-- End Damage Stock Card -->
 
             <!-- Reports -->
-            <div class="col-12">
+            <!-- <div class="col-12">
               <div class="card">
 
                 <div class="filter">
@@ -186,7 +186,7 @@ $userData = [
                 <div class="card-body">
                   <h5 class="card-title">Reports <span>/Today</span></h5>
 
-                  <!-- Line Chart -->
+                  Line Chart
                   <div id="reportsChart"></div>
 
                   <script>
@@ -241,12 +241,13 @@ $userData = [
                       }).render();
                     });
                   </script>
-                  <!-- End Line Chart -->
+                  End Line Chart
 
                 </div>
 
               </div>
-            </div><!-- End Reports -->
+            </div> -->
+            <!-- End Reports -->
 
             <!-- Stock Products Table -->
             <div class="col-12">
