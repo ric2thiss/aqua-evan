@@ -1,4 +1,3 @@
-
 <?php
 
 class Orders
@@ -15,105 +14,70 @@ class Orders
         try {
             $stmt = $this->dbconn->prepare("SELECT ot.* FROM orders RIGHT JOIN order_types ot ON orders.order_type_id = ot.order_type_id");
             $stmt->execute();
-            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $result;
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            echo "Error: " . $e->getMessage();
+            error_log("Error fetching order types: " . $e->getMessage());
             return null;
         }
     }
 
-
-    public function insert_order()
+    public function insert_order_details($data = [])
     {
         try {
-            $stmt = $this->dbconn->prepare("INSERT INTO orders (order_type_id,
-            order_date, order_status_id, customer_id, total) VALUES (:order_type_id, :
-            order_date, :order_status_id, :customer_id, :total)");
-            $stmt->bindParam(':order_type_id', $this->order_type_id);
-            $stmt->bindParam(':order_date', $this->order_date);
-            $stmt->bindParam(':order_status_id', $this->order_status_id);
-            $stmt->bindParam(':customer_id', $this->customer_id);
-            $stmt->bindParam(':total', $this->total);
+            // Extract and sanitize data
+            $order_unit_price = (float) $data["order_unit_price"];
+            $order_total_quantity = (int) $data["order_total_quantity"];
+            $order_total_cost = (float) $data["order_total_price"];
+            $order_addons_id = isset($data["order_addons_id"]) ? (int) $data["order_addons_id"] : null;
+            $payment_method = $this->sanitize($data["payment_method"]);
+            $received_amount = (float) $data["received_amount"];
+            $change_amount = (float) $data["change_amount"];
+
+            $sql = "INSERT INTO order_details 
+                    (order_unit_price, order_total_quantity, order_total_cost, order_addons_id, payment_method, received_amount, change_amount) 
+                    VALUES (:order_unit_price, :order_total_quantity, :order_total_cost, :order_addons_id, :payment_method, :received_amount, :change_amount)";
+
+            $stmt = $this->dbconn->prepare($sql);
+
+            // Bind parameters
+            $stmt->bindParam(':order_unit_price', $order_unit_price);
+            $stmt->bindParam(':order_total_quantity', $order_total_quantity);
+            $stmt->bindParam(':order_total_cost', $order_total_cost);
+            $stmt->bindParam(':order_addons_id', $order_addons_id, PDO::PARAM_INT);
+            $stmt->bindParam(':payment_method', $payment_method);
+            $stmt->bindParam(':received_amount', $received_amount);
+            $stmt->bindParam(':change_amount', $change_amount);
+
             $stmt->execute();
             return $this->dbconn->lastInsertId();
         } catch (PDOException $e) {
-            echo "Error: " . $e->getMessage();
+            error_log("Error inserting order details: " . $e->getMessage());
             return null;
         }
     }
 
-    public function insert_customer()
+    public function insert_category()
     {
-        try {
-            $stmt = $this->dbconn->prepare("INSERT INTO customers (first_name, last
-            _name, email, phone_number) VALUES (:first_name, :last_name, :email
-            , :phone_number)");
-            $stmt->bindParam(':first_name', $this->first_name);
-            $stmt->bindParam(':last_name', $this->last_name);
-            $stmt->bindParam(':email', $this->email);
-            $stmt->bindParam(':phone_number', $this->phone_number);
-            $stmt->execute();
-            return $this->dbconn->lastInsertId();
+        return;
+    }
+
+    public function insert_order($data = [])
+    {
+        try{
+            $employee_id = $data["user_id"];
+            $order_type_id = $data["order_type_id"];
+            $customer_id = $data["customer_id"];
+            $order_details_id = $this->insert_order_details();
+            $order_category_id = $this>insert_category();
         } catch (PDOException $e) {
-            echo "Error: " . $e->getMessage();
+            error_log("Error inserting order details: " . $e->getMessage());
             return null;
         }
     }
 
-    public function insert_order_details()
+    // Sanitization for strings
+    private function sanitize($param)
     {
-        try {
-            $stmt = $this->dbconn->prepare("INSERT INTO order_details (order_id,
-            product_id, quantity) VALUES (:order_id, :product_id, :quantity)");
-            $stmt->bindParam(':order_id', $this->order_id);
-            $stmt->bindParam(':product_id', $this->product_id);
-            $stmt->bindParam(':quantity', $this->quantity);
-            $stmt->execute();
-            return $this->dbconn->lastInsertId();
-        } catch (PDOException $e) {
-            echo "Error: " . $e->getMessage();
-            return null;
-        }
-    }
-
-    public function insert_order_category()
-    {
-        try {
-            $stmt = $this->dbconn->prepare("INSERT INTO order_category (order_id,
-            category_id) VALUES (:order_id, :category_id)");
-            $stmt->bindParam(':order_id', $this->order_id);
-            $stmt->bindParam(':category_id', $this->category_id);
-            $stmt->execute();
-            return $this->dbconn->lastInsertId();
-        } catch (PDOException $e) {
-            echo "Error: " . $e->getMessage();
-            return null;
-        }
-    }
-
-
-
-    public function insert_activity()
-    {
-        // Insert
-        try {
-            $stmt = $this->dbconn->prepare("INSERT INTO activity (activity_id, activity
-            , activity_date, activity_time, activity_location, activity_status, user_id)
-            VALUES (:activity_id, :activity, :activity_date, :activity_time, :activity_location
-            , :activity_status, :user_id)");
-            $stmt->bindParam(':activity_id', $this->activity_id);
-            $stmt->bindParam(':activity', $this->activity);
-            $stmt->bindParam(':activity_date', $this->activity_date);
-            $stmt->bindParam(':activity_time', $this->activity_time);
-            $stmt->bindParam(':activity_location', $this->activity_location);
-            $stmt->bindParam(':activity_status', $this->activity_status);
-            $stmt->bindParam(':user_id', $this->user_id);
-            $stmt->execute();
-            return $this->dbconn->lastInsertId();
-        } catch (PDOException $e) {
-            echo "Error: " . $e->getMessage();
-            return null;
-        }
+        return htmlspecialchars(trim($param), ENT_QUOTES, 'UTF-8');
     }
 }

@@ -45,9 +45,9 @@ class Sidebar {
                 <li class="nav-heading">Order Management</li>
 
                 <li class="nav-item">
-                    <a class="nav-link <?= $this->isActive('cashier') ?>" href="cashier-orders.php">
+                    <a class="nav-link <?= $this->isActive('payment') ?>" href="payment.php">
                         <i class="bi bi-bag-check-fill"></i>
-                        <span>Billing & Cashier</span>
+                        <span>Payment</span>
                     </a>
                 </li>
                 <li class="nav-item">
